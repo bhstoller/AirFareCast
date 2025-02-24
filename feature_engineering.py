@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
 from sklearn.impute import SimpleImputer
 from datetime import timedelta
-
+from tqdm import tqdm
+import time
+import warnings
+warnings.simplefilter(action='ignore', category=Warning)
 
 def apply_feature_engineering(df):
     """
@@ -18,27 +20,48 @@ def apply_feature_engineering(df):
     :return: transformed DataFrame
     """
 
+    print("Starting feature engineering...")
+    start_time = time.time()
+
+    print("Converting date columns...")
+
     # Set Typing
     df["searchDate"] = pd.to_datetime(df["searchDate"])
     df["flightDate"] = pd.to_datetime(df["flightDate"])
 
+    print(f"Date conversion done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Extracting travel duration...")
+
     # Extract the travel duration in minutes
     df['travelDuration'] = extract_duration(df, 'travelDuration')
+
+    print(f"Travel duration extraction done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Imputing missing travel distances...")
     
     # Impute missing travel distances
     df['travelDistance'] = impute_cols(SimpleImputer(strategy='mean'), 'totalTravelDistance', df)
-    # imputer = SimpleImputer(strategy='mean')
-    # df['totalTravelDistance'] = imputer.fit_transform(df[['totalTravelDistance']]).astype(int)
+
+    print(f"Imputation done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Processing departure times...")
 
     # Extract departure times
     df = process_times(df, column_name='segmentsDepartureTimeRaw')
+
+    print(f"Departure time processing done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Extracting departure hour and float...")
     
     # Extract departure hour and floating minutes
     df['departureTimeHour'] = df["segmentsDepartureTimeRaw"].dt.hour
     df['departureTimeFloat']= df["segmentsDepartureTimeRaw"].dt.hour + (df["segmentsDepartureTimeRaw"].dt.minute / 60)
     
+    print(f"Departure time extraction done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Processing airline codes...")
+
     # Extract airline codes
     df = process_string_column(df, column_name='segmentsAirlineCode')
+
+    print(f"Airline code processing done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Processing cabin codes...")
 
     # Extract and adjust cabin codes
     df = process_string_column(df, column_name='segmentsCabinCode')
@@ -47,16 +70,18 @@ def apply_feature_engineering(df):
     df["segmentsCabinCode"] = df["segmentsCabinCode"].str.replace('premium coach', 'premium economy')
     df.loc[df["isBasicEconomy"], 'segmentsCabinCode'] = 'basic economy'
 
-    # Log transform skewed distributions (travelDuration and travelDistance)
-    df['logTravelDuration'] = np.log(df["travelDuration"])
-    df['logTravelDistance'] = np.log(df["totalTravelDistance"])
+    print(f"Cabin class processing done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Binning seatsRemaining...")
 
     # Bin seatsRemaining
     df["binnedSeatsRemaining"] = pd.cut(
         df["seatsRemaining"],
         bins=[-1, 2, 5, 9],
-        labels=["Low", "Medium", "High"]
+        labels=[0, 1, 2]
     )
+
+    print(f"Seats binning done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Calculating days to departure...")
 
     # Add days to departure feature
     df['daysToDeparture'] = (df["flightDate"] - df["searchDate"]).dt.days.astype(int)
@@ -64,6 +89,9 @@ def apply_feature_engineering(df):
     # Add day of the week features (departureDayOfWeek and isWeekend)
     df['departureDayOfWeek'] = df['flightDate'].dt.dayofweek
     df['isWeekend'] = df['departureDayOfWeek'].isin([5, 6])
+
+    print(f"Day of week processing done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Processing holiday features...")
 
     # Add holiday features (isHoliday and nearHoliday)
     holiday_dates = {
@@ -77,18 +105,38 @@ def apply_feature_engineering(df):
 
     df['isHoliday'], df['nearHoliday'] = add_holidays(holiday_dates, df)
 
-    df.drop(columns=[
-        'totalTravelDistance', 
+    print(f"Holiday features processing done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Dropping columns...")
+
+    df.drop(columns=[ 
         'isBasicEconomy', 
-        'segmentsDepartureTimeRaw', 
-        'segmentsArrivalTimeRaw'
+        'segmentsDepartureTimeRaw',
+        'searchDate',
+        'flightDate' 
     ], inplace= True)
 
+    print(f"Dropping columns done. Time elapsed: {time.time() - start_time:.2f}s")
+    print("Renaming columns...")
 
-    df = df.rename(columns= {
+    df.rename(columns= {
         "segmentsAirlineCode": "airlineCode", 
         "segmentsCabinCode": "cabinClass",
     }, inplace= True)
+
+    print(f"Renaming done. Total time elapsed: {time.time() - start_time:.2f}s")
+    print("Adding dummies...")
+
+    dummy_cols = [
+        'startingAirport',
+        'destinationAirport',
+        'airlineCode',
+        'cabinClass'
+    ]
+    df = add_dummies(df, cols=dummy_cols)
+
+    print(f"Dummies added. Total time elapsed: {time.time() - start_time:.2f}s")
+    print("Feature engineering complete!")
+    return df
 
 def impute_cols(imputer, column, df):
     """
@@ -149,9 +197,7 @@ def process_string_column(df, column_name):
     Returns:
     pd.DataFrame: The updated dataframe with processed strings.
     """
-    df[column_name] = df[column_name].apply(
-        lambda x: x.split('||')[0] if isinstance(x, str) else x
-    )
+    df[column_name] = df[column_name].astype(str).str.split('||').str[0]
     return df
 
 def add_holidays(holiday_dates, df):
@@ -168,7 +214,14 @@ def add_holidays(holiday_dates, df):
     # Create the 'isHoliday' column
     is_holiday = df['flightDate'].isin(holiday_dates)
 
-    # Create the 'nearHoliday' column
-    near_holiday = df['flightDate'].apply(lambda x: any((abs(x - holiday) <= timedelta(days=3)) for holiday in holiday_dates))
+    # Convert holiday_dates to a NumPy array for efficient broadcasting
+    holiday_array = np.array(holiday_dates)
 
+    # Compute absolute differences in a vectorized way and check the condition
+    near_holiday = (np.abs(df["flightDate"].values[:, None] - holiday_array) <= np.timedelta64(3, 'D')).any(axis=1)
+    
     return is_holiday, near_holiday
+
+def add_dummies(df, cols):
+    df = pd.get_dummies(df, columns= cols, drop_first=True)
+    return df
