@@ -1,27 +1,19 @@
-# Ensure gdown is installed
-try:
-    import gdown
-except ImportError:
-    subprocess.run(["pip", "install", "gdown"])
-    import gdown
-
-import joblib
+import traceback
 import streamlit as st
-import os
 from main import collect_inputs
+import joblib
 
-# ✅ Your Google Drive file ID
-MODEL_URL = "https://drive.google.com/uc?id=1W9TTRRSrMwy9U3fVYc83nQETZ9B9Mp68"
+# Try loading the model with error handling
+try:
+    @st.cache_resource
+    def load_model():
+        return joblib.load("random_forest_model.pkl")
 
-@st.cache_resource
-def load_model():
-    model_path = "random_forest_model.pkl"
-    if not os.path.exists(model_path):
-        st.info("Downloading model... ⏳")
-        gdown.download(MODEL_URL, model_path, quiet=False)
-    return joblib.load(model_path)
-
-model = load_model()
+    model = load_model()
+except Exception as e:
+    st.error("❌ Error loading model")
+    st.text(traceback.format_exc())  # Show full error details
+    st.stop()
 
 # Initialize session state
 if "page" not in st.session_state:
@@ -32,7 +24,12 @@ if st.session_state.page == "input":
     st.title("✈️ Flight Price Predictor")
 
     # Get user inputs
-    user_inputs = collect_inputs()
+    try:
+        user_inputs = collect_inputs()
+    except Exception as e:
+        st.error("❌ Error collecting inputs")
+        st.text(traceback.format_exc())  # Show full error details
+        st.stop()
 
     if st.button("Search Flights"):
         st.session_state.page = "results"
@@ -46,13 +43,18 @@ elif st.session_state.page == "results":
     # Retrieve stored user inputs
     user_inputs = st.session_state.user_inputs
 
-    # Make prediction
-    predicted_price = model.predict(user_inputs)[0]
+    # Debug: Check if user inputs match expected features
+    st.write("Input Features:", user_inputs.columns.tolist())
 
-    # Display result
-    st.success(f"💰 Estimated Flight Price: **${predicted_price:.2f}**")
+    # Try making prediction
+    try:
+        predicted_price = model.predict(user_inputs)[0]
+        st.success(f"💰 Estimated Flight Price: **${predicted_price:.2f}**")
+    except Exception as e:
+        st.error("❌ Error during prediction")
+        st.text(traceback.format_exc())  # Show full error details
+        st.stop()
 
-    # Go back button
     if st.button("🔄 Try Another Search"):
         st.session_state.page = "input"
         st.rerun()
