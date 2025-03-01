@@ -1,6 +1,5 @@
 absl-py==2.1.0
 altair==5.5.0
-asttokens @ file:///home/conda/feedstock_root/build_artifacts/asttokens_1733250440834/work
 astunparse==1.6.3
 attrs==25.1.0
 beautifulsoup4==4.13.3
