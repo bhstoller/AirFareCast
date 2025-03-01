@@ -111,6 +111,7 @@ def apply_feature_engineering(df):
     df.drop(columns=[ 
         'isBasicEconomy', 
         'segmentsDepartureTimeRaw',
+        'totalTravelDistance',
         'searchDate',
         'flightDate' 
     ], inplace= True)
@@ -130,7 +131,8 @@ def apply_feature_engineering(df):
         'startingAirport',
         'destinationAirport',
         'airlineCode',
-        'cabinClass'
+        'cabinClass',
+        'binnedSeatsRemaining'
     ]
     df = add_dummies(df, cols=dummy_cols)
 
