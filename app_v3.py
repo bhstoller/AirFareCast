@@ -1,4 +1,10 @@
-import gdown
+# Ensure gdown is installed
+try:
+    import gdown
+except ImportError:
+    subprocess.run(["pip", "install", "gdown"])
+    import gdown
+
 import joblib
 import streamlit as st
 import os
