@@ -145,9 +145,9 @@ def display_results(model):
 
     try:
         predicted_price = model.predict(user_inputs)[0]
-        price_range = 50
+        price_range = 65
 
-        st.write(f"### 💰 **Expected Price:** ${predicted_price:.2f} ± ${price_range}")
+        st.write(f"### 💰 Expected Price: \\${predicted_price:.2f} ± \\${price_range:.2f}")
 
         st.write("---")
 
