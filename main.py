@@ -167,6 +167,7 @@ def display_results(model):
             ax.set_xlabel("Days to Departure", **csfont)
             ax.set_ylabel("Predicted Price ($)", **csfont)
             ax.set_title("Price Forecast", **csfont, fontweight= 'bold', fontsize= 14)
+            ax.set_title("Price Forecast")
             ax.set_xlim(df_forecast["Days to Departure"].min(), df_forecast["Days to Departure"].max())
             ax.set_ylim(df_forecast["Raw Price"].min() * 0.9, df_forecast["Raw Price"].max() * 1.1)  # Add some margin
             
