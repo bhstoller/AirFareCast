@@ -1,3 +1,6 @@
 *.pyc
 .DS_Store
 /data
+__pycache__/data_loading.cpython-312.pyc
+*.pyc
+*.html

@@ -7,7 +7,7 @@ import time
 import warnings
 warnings.simplefilter(action='ignore', category=Warning)
 
-def apply_feature_engineering(df):
+def apply_feature_engineering(df, rnn=False):
     """
         Apply feature engineering function.
         
@@ -52,7 +52,7 @@ def apply_feature_engineering(df):
     
     # Extract departure hour and floating minutes
     df['departureTimeHour'] = df["segmentsDepartureTimeRaw"].dt.hour
-    df['departureTimeFloat']= df["segmentsDepartureTimeRaw"].dt.hour + (df["segmentsDepartureTimeRaw"].dt.minute / 60)
+    df['departureTimeFloat'] = df["segmentsDepartureTimeRaw"].dt.hour + (df["segmentsDepartureTimeRaw"].dt.minute / 60)
     
     print(f"Departure time extraction done. Time elapsed: {time.time() - start_time:.2f}s")
     print("Processing airline codes...")
@@ -107,14 +107,16 @@ def apply_feature_engineering(df):
 
     print(f"Holiday features processing done. Time elapsed: {time.time() - start_time:.2f}s")
     print("Dropping columns...")
-
-    df.drop(columns=[ 
-        'isBasicEconomy', 
+    drop_columns = [
+        'isBasicEconomy',
         'segmentsDepartureTimeRaw',
         'totalTravelDistance',
-        'searchDate',
-        'flightDate' 
-    ], inplace= True)
+        'searchDate'
+    ]
+    if not rnn:
+        drop_columns += ['flightDate']
+
+    df.drop(columns=drop_columns, inplace= True)
 
     print(f"Dropping columns done. Time elapsed: {time.time() - start_time:.2f}s")
     print("Renaming columns...")
@@ -134,7 +136,7 @@ def apply_feature_engineering(df):
         'cabinClass',
         'binnedSeatsRemaining'
     ]
-    df = add_dummies(df, cols=dummy_cols)
+    df = add_dummies(df, cols=dummy_cols, rnn=rnn)
 
     print(f"Dummies added. Total time elapsed: {time.time() - start_time:.2f}s")
     print("Feature engineering complete!")
@@ -224,6 +226,11 @@ def add_holidays(holiday_dates, df):
     
     return is_holiday, near_holiday
 
-def add_dummies(df, cols):
-    df = pd.get_dummies(df, columns= cols, drop_first=True)
+def add_dummies(df, cols, rnn=False):
+    dummies = pd.get_dummies(df[cols], drop_first=True)
+    df = pd.concat([df, dummies], axis=1)
+
+    if not rnn:
+        df = df.drop(columns=cols)
+
     return df
