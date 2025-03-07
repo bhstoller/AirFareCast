@@ -53,11 +53,7 @@ def apply_feature_engineering(df):
     df['travelDistance'] = imputer.fit_transform(df[['totalTravelDistance']])
 
     print("Processing departure times...")
-    df = process_times(df, column_name='segmentsDepartureTimeRaw')
-
-    print("Extracting departure hour and float...")
-    df['departureTimeHour'] = df["segmentsDepartureTimeRaw"].dt.hour
-    df['departureTimeFloat'] = df["segmentsDepartureTimeRaw"].dt.hour + (df["segmentsDepartureTimeRaw"].dt.minute / 60)
+    df['departureTimeHour'] = df["segmentsDepartureTimeRaw"].str[11:13]
 
     print("Processing airline and cabin class codes...")
     df["segmentsCabinCode"] = df["segmentsCabinCode"].astype(str).copy()
