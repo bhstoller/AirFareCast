@@ -114,13 +114,15 @@ def apply_feature_engineering(df, dnn= False):
         'isBasicEconomy', 
         'segmentsDepartureTimeRaw', 
         'totalTravelDistance',
-        'searchDate',
-        'airlineCode',
-        'cabinClass'
+        'searchDate'
     ]
 
     if not dnn:
-        drop_columns += ['flightDate']
+        drop_columns += [
+            'flightDate', 
+            'airlineCode',
+            'cabinClass'
+        ]
 
     df.drop(columns=drop_columns, inplace=True, errors='ignore')
 
