@@ -50,7 +50,7 @@ def load_data():
     )
     return df
 
-def apply_feature_engineering(df):
+def apply_feature_engineering(df, dnn= False):
     print("Starting feature engineering...")
 
     df = df.copy()
@@ -115,7 +115,10 @@ def apply_feature_engineering(df):
         'segmentsDepartureTimeRaw', 
         'totalTravelDistance',
         'searchDate',
-        'flightDate']
+    ]
+
+    if not dnn:
+        drop_columns += ['flightDate']
 
     df.drop(columns=drop_columns, inplace=True, errors='ignore')
 
