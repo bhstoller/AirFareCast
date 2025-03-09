@@ -115,6 +115,8 @@ def apply_feature_engineering(df, dnn= False):
         'segmentsDepartureTimeRaw', 
         'totalTravelDistance',
         'searchDate',
+        'airlineCode',
+        'cabinClass'
     ]
 
     if not dnn:
