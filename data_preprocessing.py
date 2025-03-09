@@ -7,7 +7,21 @@ from tqdm import tqdm
 import time
 import warnings
 import pickle
+from tqdm.notebook import tqdm
+from dask.diagnostics import ProgressBar
+import dask.dataframe as dd
+
 warnings.simplefilter(action='ignore', category=Warning)
+
+def process_data():
+    """
+    Get the loaded, feature engineered, and wrangled dataset.
+    """
+    df = load_data()
+    df = apply_feature_engineering(df)
+    df = add_historical_price_features(df)
+
+    return df
 
 # Read the data using parquet
 def load_data():
@@ -36,7 +50,7 @@ def load_data():
     )
     return df
 
-def apply_feature_engineering(df):
+def apply_feature_engineering(df, dnn= False):
     print("Starting feature engineering...")
 
     df = df.copy()
@@ -96,7 +110,19 @@ def apply_feature_engineering(df):
     df['isHoliday'], df['nearHoliday'] = add_holidays(holiday_dates, df)
 
     print("Dropping unnecessary columns...")
-    drop_columns = ['isBasicEconomy', 'segmentsDepartureTimeRaw', 'totalTravelDistance']
+    drop_columns = [
+        'isBasicEconomy', 
+        'segmentsDepartureTimeRaw', 
+        'totalTravelDistance',
+        'searchDate'
+    ]
+
+    if not dnn:
+        drop_columns += [
+            'flightDate', 
+            'airlineCode',
+            'cabinClass'
+        ]
 
     df.drop(columns=drop_columns, inplace=True, errors='ignore')
 
@@ -187,11 +213,30 @@ def add_holidays(holiday_dates, df):
     
     return is_holiday, near_holiday
 
-# def add_dummies(df, cols, rnn=False):
-#     dummies = pd.get_dummies(df[cols], drop_first=True)
-#     df = pd.concat([df, dummies], axis=1)
+def add_historical_price_features(df):
+    """
+    Adds historical price features (t-1, t-2, ..., t-7) with visual feedback on slow operations.
+    Uses Dask to sort the DataFrame with progress feedback and pandas groupby+shift for lag features.
+    """
+    df = df.copy()
 
-#     if not rnn:
-#         df = df.drop(columns=cols)
+    df['flightDate'] = pd.to_datetime(df['flightDate'])
+    df['searchDate'] = pd.to_datetime(df['searchDate'])
 
-#     return df
+    ddf = dd.from_pandas(df, npartitions=8)
+    sort_columns = ['flightDate', 'departureTimeHour', 'startingAirport', 'destinationAirport', 'searchDate']
+
+    print("Starting sort operation...")
+    with ProgressBar():
+        ddf = ddf.sort_values(by=sort_columns)
+        ddf = ddf.compute()
+    df = ddf
+    print("Sort completed.")
+
+    group_cols = ['flightDate', 'departureTimeHour', 'startingAirport', 'destinationAirport']
+
+    for lag in tqdm(range(1, 8), desc="Creating lag features"):
+        df[f'price_t_minus_{lag}'] = df.groupby(group_cols)['totalFare'].shift(lag)
+
+    print("Historical price features added successfully!")
+    return df
