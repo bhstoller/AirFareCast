@@ -50,7 +50,7 @@ def load_data():
     )
     return df
 
-def apply_feature_engineering(df, dnn= False):
+def apply_feature_engineering(df, dnn= False, drop_search_date= True):
     print("Starting feature engineering...")
 
     df = df.copy()
@@ -114,8 +114,10 @@ def apply_feature_engineering(df, dnn= False):
         'isBasicEconomy', 
         'segmentsDepartureTimeRaw', 
         'totalTravelDistance',
-        'searchDate'
     ]
+
+    if drop_search_date:
+        drop_columns.append('searchDate')
 
     if not dnn:
         drop_columns += [
@@ -213,16 +215,18 @@ def add_holidays(holiday_dates, df):
     
     return is_holiday, near_holiday
 
-def add_historical_price_features(df):
+def add_historical_price_features(df, num_lags=7):
     """
     Adds historical price features (t-1, t-2, ..., t-7) with visual feedback on slow operations.
     Uses Dask to sort the DataFrame with progress feedback and pandas groupby+shift for lag features.
     """
     df = df.copy()
 
+    # Convert date columns
     df['flightDate'] = pd.to_datetime(df['flightDate'])
     df['searchDate'] = pd.to_datetime(df['searchDate'])
 
+    # Use Dask for faster sorting on large DataFrames.
     ddf = dd.from_pandas(df, npartitions=8)
     sort_columns = ['flightDate', 'departureTimeHour', 'startingAirport', 'destinationAirport', 'searchDate']
 
@@ -235,7 +239,7 @@ def add_historical_price_features(df):
 
     group_cols = ['flightDate', 'departureTimeHour', 'startingAirport', 'destinationAirport']
 
-    for lag in tqdm(range(1, 8), desc="Creating lag features"):
+    for lag in tqdm(range(1, num_lags + 1), desc="Creating lag features"):
         df[f'price_t_minus_{lag}'] = df.groupby(group_cols)['totalFare'].shift(lag)
 
     print("Historical price features added successfully!")
