@@ -90,7 +90,7 @@ def autoregressive_forecast(base_row, model, model_features, n_forecast=7, label
     return historical, predictions
 
 
-data_path = "data/sample_data_lagged.csv"
+data_path = "sample_data2.csv"
 model_path = "submission/xg_boost_model.pkl"
 encoders_path = "label_encoders.pkl"
 
@@ -207,8 +207,9 @@ if submitted:
 
     historical, forecasted = autoregressive_forecast(base_row, model, model_features, n_forecast=7,
                                                      label_encoders=label_encoders)
-    hist_days = list(range(-7, 0))
-    forecast_days = list(range(1, 8))
+    today_date = demo_today
+    hist_dates = [today_date + pd.DateOffset(days=i) for i in range(-7, 0)]
+    forecast_dates = [today_date + pd.DateOffset(days=i) for i in range(0, 8)]
 
     if forecasted[0] > price_today:
         diff = forecasted[0] - price_today
@@ -226,16 +227,31 @@ if submitted:
     except OSError:
         pass  # Fallback to default style if 'seaborn' is unavailable
 
+    historical.append(price_today)
+    forecasted.insert(0, price_today)
+
+    hist_dates.append(today_date)
+    forecast_dates[0] = today_date
+
+    try:
+        plt.style.use('seaborn')
+    except OSError:
+        pass  # Fallback to default style if 'seaborn' is unavailable
+
     plt.figure(figsize=(12, 6))
-    plt.plot(hist_days, historical, marker='o', markersize=8, linewidth=2, label='Historical Prices', color='blue')
-    plt.plot(forecast_days, forecasted, marker='o', markersize=8, linewidth=2, linestyle='--', color='orange',
+    plt.plot(hist_dates, historical, marker='o', markersize=8, linewidth=2, label='Historical Prices', color='blue')
+    plt.plot(forecast_dates, forecasted, marker='o', markersize=8, linewidth=2, linestyle='--', color='orange',
              label='Forecasted Prices')
-    plt.fill_between(forecast_days, forecasted, alpha=0.3, color='orange')
-    plt.xlabel("Day (relative)", fontsize=14)
+    plt.fill_between(forecast_dates, forecasted, alpha=0.3, color='orange')
+
+    # Labels and formatting
+    plt.xlabel("Date", fontsize=14)
     plt.ylabel("Total Fare", fontsize=14)
     plt.title("Historical Prices and 7-Day Forecast", fontsize=16, fontweight='bold')
-    plt.xticks(fontsize=12)
+    plt.xticks(rotation=45, fontsize=12)
     plt.yticks(fontsize=12)
     plt.legend(fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.5)
+
     st.pyplot(plt)
+
