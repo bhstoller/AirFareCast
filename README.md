@@ -5,8 +5,11 @@ This project focuses on analyzing airline fare pricing trends and predicting tic
 ### Key Objectives
 
 •	Explore airline fare trends over time to identify pricing patterns.
+
 •	Analyze key factors affecting airline pricing, such as seat availability, flight distance, and fare class.
+
 •	Develop machine learning models to predict future ticket prices.
+
 •	Provide data-driven recommendations for cost-effective flight bookings.
 
  Exploratory Data Analysis (EDA)
@@ -43,5 +46,30 @@ This project focuses on analyzing airline fare pricing trends and predicting tic
 7.	Fare vs. Travel Distance
  
 •	Longer flights generally cost more, but short-haul flights also have expensive fares, likely due to monopolized routes or last-minute bookings.
+
+## Modeling Approach
+
+### Models Tested
+
+1.	Traditional Time Series Models
+   
+•	ARIMA & SARIMA: Failed to generalize well.
+
+•	Prophet: Dropped due to poor performance.
+
+
+2.	Machine Learning Models
+
+•	Decision Tree
  
-Dataset is the Flight Price Dataset. Dil Wong. (2022). Flight Prices [Data set]. Kaggle. https://www.kaggle.com/datasets/dilwong/flightprices
+•	Random Forest (Best Model)
+
+•	XGBoost
+
+3.	Deep Learning Model
+
+•	RNN-LSTM: Underperformed due to high variance in pricing data.
+ 
+## Dataset
+
+Dil Wong. (2022). Flight Prices [Data set]. Kaggle. https://www.kaggle.com/datasets/dilwong/flightprices
