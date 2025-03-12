@@ -1,6 +1,45 @@
-# AirFareCast
-Our project aims to use time series forecasting and machine learning to predict airline ticket price variations before departure. By analyzing historical flight price data, we intend to identify temporal patterns in price fluctuations. The goal is to help consumers make more informed decisions about when to purchase tickets, potentially saving money and improving their travel planning confidence. The airline industry is a notorious case study of the price elasticity of demand, with nearly all modern airlines utilizing dynamic pricing strategies to adjust ticket prices based on factors such as time to departure, demand, and other market conditions.
+## Project Overview
 
-Our hypothesis is that by modeling how prices change based on time to departure, it is possible to predict when ticket prices are most likely to increase. Specifically, we aim to analyze historical flight price data to identify temporal patterns that will allow us to better understand the fluctuations in price leading up to a flight’s departure. This would ultimately help consumers make more informed decisions, increasing confidence in their planning and minimizing unnecessary spending.  
+This project focuses on analyzing airline fare pricing trends and predicting ticket prices using time-series forecasting and machine learning models. The goal is to provide insights that help travelers make cost-effective booking decisions by understanding fare patterns across different airlines, flight durations, cabin classes, and ticket availability.
 
+### Key Objectives
+
+	•	Explore airline fare trends over time to identify pricing patterns.
+	•	Analyze key factors affecting airline pricing, such as seat availability, flight distance, and fare class.
+	•	Develop machine learning models to predict future ticket prices.
+	•	Provide data-driven recommendations for cost-effective flight bookings.
+
+ Exploratory Data Analysis (EDA)
+
+### Key Insights
+
+	1.	Fare Trends Over Time
+ 
+	•	Ticket prices fluctuate significantly, with a slight downward trend before departure.
+	•	Price spikes suggest high variability due to seasonal demand.
+ 
+	2.	Total Fare Distribution
+ 
+	•	Most fares are concentrated below $1,000, but outliers exceed $8,000, likely due to premium class tickets.
+ 
+	3.	Correlation Analysis
+ 
+	•	Base fare is the strongest predictor of total fare.
+	•	Seats remaining has little correlation with fare price, suggesting that availability alone does not drive ticket pricing.
+ 
+	4.	Pricing by Seat Availability
+ 
+	•	Prices do not significantly change based on the number of seats remaining.
+	•	Price variability exists across all seat availability categories.
+ 
+	5.	Non-Stop vs. Connecting Flights
+ 
+	•	Non-stop flights cost more on average, while connecting flights have greater variability in pricing.
+	6.	Basic Economy vs. Regular Economy
+	•	Basic Economy consistently has lower fares, while Regular Economy varies widely due to premium seating.
+ 
+	7.	Fare vs. Travel Distance
+ 
+	•	Longer flights generally cost more, but short-haul flights also have expensive fares, likely due to monopolized routes or last-minute bookings.
+ 
 Dataset is the Flight Price Dataset. Dil Wong. (2022). Flight Prices [Data set]. Kaggle. https://www.kaggle.com/datasets/dilwong/flightprices
