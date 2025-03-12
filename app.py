@@ -90,7 +90,7 @@ def autoregressive_forecast(base_row, model, model_features, n_forecast=7, label
     return historical, predictions
 
 
-data_path = "data/sample_data_lagged.csv"
+data_path = "sample_data2.csv"
 model_path = "submission/xg_boost_model.pkl"
 encoders_path = "label_encoders.pkl"
 
@@ -254,3 +254,4 @@ if submitted:
     plt.grid(True, linestyle='--', alpha=0.5)
 
     st.pyplot(plt)
+

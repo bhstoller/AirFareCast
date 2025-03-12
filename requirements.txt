@@ -5,3 +5,4 @@ gdown
 joblib
 requests
 matplotlib
+xgboost
