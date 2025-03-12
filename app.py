@@ -41,7 +41,7 @@ def encode_value(val, encoder):
 
 @st.cache_data
 def load_csv_data(path):
-    return pd.read_csv(path, parse_dates=['searchDate', 'flightDate'])[:25000]
+    return pd.read_csv(path, parse_dates=['searchDate', 'flightDate'])
 
 
 @st.cache_resource
@@ -97,6 +97,9 @@ encoders_path = "label_encoders.pkl"
 df = load_csv_data(data_path)
 model = load_model(model_path)
 label_encoders = load_label_encoders(encoders_path)
+
+demo_today = datetime(2022, 5, 1)
+df = df[df['searchDate'] == demo_today]
 
 # Convert numeric codes to strings for startingAirport and destinationAirport
 df['startingAirport'] = df['startingAirport'].apply(
@@ -163,7 +166,6 @@ cabin_class_options = sorted(set(df['cabinClass'].unique()))
 st.title("AirFareCast: Flight Price Forecasting")
 st.write("Enter when you want to fly, and we'll tell you when to book.")
 
-demo_today = datetime(2022, 5, 1)
 st.write(f"Today's Date: **{demo_today.strftime('%Y-%m-%d')}**")
 
 with st.form("itinerary_form"):
