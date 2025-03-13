@@ -2,6 +2,9 @@
 
 This project focuses on analyzing airline fare pricing trends and predicting ticket prices using time-series forecasting and machine learning models. The goal is to provide insights that help travelers make cost-effective booking decisions by understanding fare patterns across different airlines, flight durations, cabin classes, and ticket availability.
 
+### Demo
+https://airfarecast-timeseriesfp.streamlit.app
+
 ### Key Objectives
 
 •	Explore airline fare trends over time to identify pricing patterns.
